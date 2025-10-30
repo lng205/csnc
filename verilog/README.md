@@ -1,96 +1,33 @@
-# Finite-Field FEC Codec RTL
+# 循环移位 FEC RTL 模块说明
 
-This directory holds a hardware-friendly rendition of the packet FEC pipeline sketched in `encoder.py` and exercised by `matrix/matrix_test.py`.  The RTL mirrors the Python stages so you can co-verify the implementations symbol-by-symbol.
+本目录提供可综合的 SystemVerilog 实现，用于在 FPGA 上加速循环移位 FEC 编解码流程。模块按照“矩阵运算内核 → 解码 → 编码 → 流式封装”的层次划分，便于在不同系统中独立复用或组合使用。
 
-## Data Flow
-- Symbols arrive as `M` parallel words of width `DATA_W` (the Python code calls this `length - 1`).
-- `fec_codec` adds a parity bit to each word, yielding the `WIDTH = DATA_W + 1` cyclic-shift domain used by the matrix arithmetic.
-- The decoder stage applies the inverse Vandermonde matrix (`M × M`) using XOR plus barrel shifts, matching `apply_matrix(decode_coeffs, …)` in Python.
-- The encoder stage applies the selected Vandermonde rows to rebuild the transmit set.
-- Parity bits are dropped to restore the original symbol width.
+## 核心模块
 
-## Modules
-- `fec_matrix_apply.sv` – combinational matrix engine that consumes an `M × N` coefficient array and `N` input symbols and emits `M` outputs; helper functions for popcount/rotation live here.
-- `fec_codec.sv` – combinational codec wiring parity lift → decode → encode → parity drop with debug taps.
-- `fec_codec_stream.sv` – registered streaming wrapper with ready/valid handshakes and a lightweight CSR port (`cfg_we`, `cfg_select`, `cfg_index`, `cfg_data`) for loading Vandermonde coefficients at run time.  Debug busses expose the lifted/decoded/encoded snapshots.
-- `fec_codec_tb.sv` – combinational smoke test that hard-wires the matrices for seed `42`, `packets=[0,3,4]`.
-- `fec_codec_stream_tb.sv` – drives the streaming wrapper, programs its coefficient store, and cross-checks the debug taps against the Python trial.
+| 文件 | 说明 |
+| --- | --- |
+| `fec_matrix_apply.sv` | 核心矩阵运算单元。对 Vandermonde 系数矩阵与符号向量执行移位 + XOR 组合。内部包含掩码翻转与循环移位函数。 |
+| `fec_decoder.sv` | 独立解码模块，负责 parity 扩展并调用 `fec_matrix_apply` 完成逆矩阵运算。输出升维后的符号，用于后续编码或外部处理。 |
+| `fec_encoder.sv` | 独立编码模块，接收升维后的符号，执行编码矩阵组合并回收 parity 位，输出原始宽度。 |
+| `fec_codec.sv` | 顶层组合模块，将 decoder 与 encoder 串联，同时保留 `lifted`/`decoded`/`encoded` 调试端口。 |
+| `fec_codec_stream.sv` | 时序化外壳，包含 `valid/ready` 握手、系数寄存器配置口（`cfg_we/cfg_select/cfg_index/cfg_data`）以及调试观测总线，便于与软件流水线对比。 |
+| `cs_encoder_top.sv` | 示例顶层：将 `fec_encoder` 扁平化封装成单个模块，方便在 Vivado 工程中直接引用。 |
 
-All RTL is written in synthesizable SystemVerilog.  Parameters let you retarget different symbol counts/lengths without touching the logic.
+## 测试平台
 
-## Feeding Coefficients
-The Python harness already computes the matrices you need:
+- `fec_codec_tb.sv`：验证组合顶层的逐阶段输出是否与 Python 参考实现一致。
+- `fec_codec_stream_tb.sv`：在流式接口下加载系数、发送固定负载并比对调试端口。
+- `fec_codec_sim.tcl`：Vivado 批处理脚本，一键编译并执行上述两个 testbench。
 
-```bash
-python matrix/matrix_test.py  # assumes requirements.txt is installed
-```
+## 综合与资源评估
 
-Use `Van(m, k, length - 1)` with the desired packet selection to dump:
+- `synth_resource_compare.tcl`：批量综合循环移位 FEC 与 AMD 官方 RS Encoder/Decoder IP。脚本会生成多个工程目录，如 `fec_rs_compare_m3k5w10`，并在 `D:/vivado/fec_rs_compare_summary.csv` 中输出 LUT/寄存器统计结果。
+- `generated/`：存放 `scripts/generate_static_fec.py` 自动产生的常量系数顶层（例如 `fec_codec_static_m3_k5_w10.sv`）。可根据需要修改脚本参数后重新生成。
 
-```python
-decode = van.invert(packets)          # shape (M, M)
-encode = van.M[:, packets]            # shape (M, M)
-```
+## 使用提示
 
-Populate the testbench arrays (or a small ROM/CSR block in your design) with these `WIDTH`-bit integer coefficients.  They map 1:1 onto the Verilog coefficient arrays.
+1. 在添加模块到工程前，请确保 `requirements.txt` 所需 Python 库已安装，并运行脚本生成对应的常量系数顶层。
+2. 如果仅需解码或编码功能，可直接实例化 `fec_decoder` 或 `fec_encoder`；完整链路则使用 `fec_codec` 或 `fec_codec_stream`。
+3. RS IP 需要 Vivado 提供的官方许可证，批处理脚本会出现 `hardware_evaluation` 提示，但不影响资源评估。
 
-For the streaming wrapper, write `M × M` entries into the decode plane (`cfg_select=0`) followed by the encode plane (`cfg_select=1`).  The row-major index is `cfg_index = row * M + col`.
-
-## Simulation Quickstart (Vivado xsim)
-```bash
-# from Windows CMD (Vivado 2025.1)
-xvlog -sv fec_matrix_apply.sv fec_codec.sv fec_codec_tb.sv fec_codec_stream.sv fec_codec_stream_tb.sv
-xelab work.fec_codec_tb -s fec_codec_tb
-xsim  fec_codec_tb -runall
-xelab work.fec_codec_stream_tb -s fec_codec_stream_tb
-xsim  fec_codec_stream_tb -runall
-```
-
-Or run both automatically:
-
-```bash
-vivado -mode batch -source fec_codec_sim.tcl        # default temp workdir beside the script
-vivado -mode batch -source fec_codec_sim.tcl -- -work D:/tmp/fec -skip_core_tb
-```
-
-## Reference Trials
-The Python harness (`matrix_test.py`) can emit snapshots for any RNG seed.  The table below shows three representative runs; the HDL testbenches are preloaded with the `seed=42` case.
-
-| seed | packets   | stage                 | width | symbol0      | symbol1      | symbol2      |
-|------|-----------|-----------------------|-------|--------------|--------------|--------------|
-| 7    | [2,3,4]   | input                 | 10    | 0011000110   | 1000001110   | 0010101101   |
-|      |           | lift_to_cyclic_domain | 11    | 00011000110  | 01000001110  | 10010101101  |
-|      |           | fec_decode            | 11    | 11010111000  | 11110000110  | 11101000000  |
-|      |           | fec_encode            | 11    | 00011000110  | 01000001110  | 10010101101  |
-|      |           | trim_zero_padding     | 10    | 0011000110   | 1000001110   | 0010101101   |
-| 13   | [2,3,4]   | input                 | 10    | 1011010100   | 1011001010   | 0111110110   |
-|      |           | lift_to_cyclic_domain | 11    | 11011010100  | 11011001010  | 10111110110  |
-|      |           | fec_decode            | 11    | 10111101110  | 10110111011  | 01101101111  |
-|      |           | fec_encode            | 11    | 11011010100  | 11011001010  | 10111110110  |
-|      |           | trim_zero_padding     | 10    | 1011010100   | 1011001010   | 0111110110   |
-| 42   | [0,3,4]   | input                 | 10    | 1011110001   | 1111101000   | 1011101100   |
-|      |           | lift_to_cyclic_domain | 11    | 01011110001  | 01111101000  | 01011101100  |
-|      |           | fec_decode            | 11    | 11110100010  | 00100110001  | 10001100010  |
-|      |           | fec_encode            | 11    | 01011110001  | 01111101000  | 01011101100  |
-|      |           | trim_zero_padding     | 10    | 1011110001   | 1111101000   | 1011101100   |
-
-## Datapath Sketch
-
-```mermaid
-flowchart LR
-    in[Input symbols<br/>DATA_W each] --> parity[Parity lift<br/>add MSB parity]
-    parity --> decode[fec_matrix_apply<br/>decode coeffs]
-    decode --> encode[fec_matrix_apply<br/>encode coeffs]
-    encode --> drop[Drop parity<br/>restore DATA_W]
-    drop --> out[Output symbols]
-    cfg[(cfg_we/cfg_index/cfg_data)] --> decode
-    cfg --> encode
-```
-
-## Integration Notes
-- The codec is purely combinational; wrap it in a register shell if you need pipelining or streaming handshakes.
-- Coefficients can be hard-wired parameters, configuration registers, or BRAM contents.
-- The symbol functions expect the same “flip heavy masks” rule as the Python `CyclicMatrix.flip_bits` helper to minimize rotation weight.
-- To emulate packet loss, zero out the corresponding columns before the encode stage.
-
-Record any verification runs (Python seed, matrices, HDL simulation command) so they can be replayed later.
+如需进一步了解系统级集成与实验流程，请参考仓库根目录的 README 及 `algo/fec_vs_rs.md`。

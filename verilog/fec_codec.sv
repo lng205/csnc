@@ -14,46 +14,24 @@ module fec_codec #(
   output logic [WIDTH-1:0]  encoded_symbols[M]
 );
 
-  // Parity extension in the cyclic domain.
-  function automatic logic [WIDTH-1:0] parity_extend(input logic [DATA_W-1:0] word);
-    logic parity = ^word;
-    return {parity, word};
-  endfunction
-
-  function automatic logic [DATA_W-1:0] drop_parity(input logic [WIDTH-1:0] word);
-    return word[DATA_W-1:0];
-  endfunction
-
-  always_comb begin
-    for (int idx = 0; idx < M; idx++) begin
-      lifted_symbols[idx] = parity_extend(symbols_in[idx]);
-    end
-  end
-
-  fec_matrix_apply #(
-    .ROWS(M),
-    .COLS(M),
-    .W(WIDTH)
-  ) decode_stage (
-    .coeffs (decode_coeffs),
-    .symbols(lifted_symbols),
-    .result (decoded_symbols)
+  fec_decoder #(
+    .M(M),
+    .WIDTH(WIDTH)
+  ) u_decoder (
+    .symbols_in    (symbols_in),
+    .decode_coeffs (decode_coeffs),
+    .lifted_symbols(lifted_symbols),
+    .decoded_symbols(decoded_symbols)
   );
 
-  fec_matrix_apply #(
-    .ROWS(M),
-    .COLS(M),
-    .W(WIDTH)
-  ) encode_stage (
-    .coeffs (encode_coeffs),
-    .symbols(decoded_symbols),
-    .result (encoded_symbols)
+  fec_encoder #(
+    .M(M),
+    .WIDTH(WIDTH)
+  ) u_encoder (
+    .decoded_symbols(decoded_symbols),
+    .encode_coeffs  (encode_coeffs),
+    .encoded_symbols(encoded_symbols),
+    .symbols_out    (symbols_out)
   );
-
-  always_comb begin
-    for (int idx = 0; idx < M; idx++) begin
-      symbols_out[idx] = drop_parity(encoded_symbols[idx]);
-    end
-  end
 
 endmodule : fec_codec

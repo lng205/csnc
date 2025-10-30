@@ -39,7 +39,7 @@ foreach combo $combos {
   file mkdir $src_dir
 
   set verilog_dir [file join $repo_dir "verilog"]
-  foreach fname {"fec_matrix_apply.sv" "fec_codec.sv"} {
+  foreach fname {"fec_matrix_apply.sv" "fec_decoder.sv" "fec_encoder.sv" "fec_codec.sv"} {
     file copy -force [file join $verilog_dir $fname] [file join $src_dir $fname]
   }
   file copy -force $generated_file [file join $src_dir [file tail $generated_file]]
