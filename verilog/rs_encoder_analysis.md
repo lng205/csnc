@@ -56,7 +56,14 @@ vivado -mode batch -source scripts/rs_encoder_min_tb.tcl \
 ```
 参数依次为：工程目录、器件、符号位宽 m、块长 n、信息符号 k、纠错能力 t。
 
+目标器件示例：
+- Zynq-7000：`xc7z010clg225-1`
+- ZU3EG：`xczu3eg-sbva484-1-e`
+
 ## 与循环移位 FEC 的映射关系
 - 二者均为系统码，便于在同一帧结构下对比资源与吞吐。
 - 我方编码器为组合/浅流水的“移位+XOR”结构，资源更低；RS 编码器为域上多项式结构，校验生成以 LFSR/乘法器为主。
 - 对比建议：使用相同 `K`、符号位宽 `m`，记录 LUT/寄存器、Fmax、首字/帧延迟；详见 `algo/fec_vs_rs.md` 的报告模板。
+
+## 附：周期测试报告
+- 已整理的 3×1500B 场景周期统计见 `verilog/rs_bench_report.md`。

@@ -34,8 +34,13 @@ xsim.dir/
 
 # Project-local Vivado workspaces
 vivado_rs_tb/
+vivado_rs_bench/
+vivado_rs_ede/
+vivado_rs_synth/
 verilog/generated/
 dfx_runtime.txt
+*.mif
+vivado_*.backup.*
 
 # Tooling caches
 .pytest_cache/

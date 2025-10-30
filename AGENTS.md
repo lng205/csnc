@@ -14,6 +14,11 @@
   - `framework.md`：算法流程与设计说明
   - `fec_vs_rs.md`：与 RS IP 的资源对比
 - `verilog/`：RTL 与脚本；`scripts/`：系数与工程生成工具
+  - `rs_encoder_min_tb.tcl`：最小 RS 编码器实例化与仿真脚本
+  - `rs_encoder_bench_cycles.tcl`：按 (m,n,k,bytes,packets) 统计拍数脚本
+  - `rs_encode_decode_erase_tb.tcl`：RS 编码→随机擦除 2 符号→解码 端到端测试
+  - `rs_synth_util_report.tcl`：批量综合 Encoder/Decoder 并导出利用率/时序
+  - `summarize_utilization.py`：解析 `utilization.rpt` 生成 Markdown 摘要
   - `rs_encoder_analysis.md`：AMD RS 编码器接口/参数与对照分析
 
 ## 环境与开发命令
@@ -25,6 +30,11 @@
   ```
 - 在 `algo/` 目录运行：
   - `python matrix_test.py`：按位循环 FEC 管线回归
+ - 在 `verilog/`/`scripts/` 目录按需运行 Vivado 批处理：
+   - 周期统计：`vivado -mode batch -source scripts/rs_encoder_bench_cycles.tcl -tclargs ./vivado_rs_bench <part> 10 5 3 1500 3`
+   - 端到端：`vivado -mode batch -source scripts/rs_encode_decode_erase_tb.tcl -tclargs ./vivado_rs_ede <part> 10 5 3 1500 3`
+   - 资源与时序（ZU3EG）：`vivado -mode batch -source scripts/rs_synth_util_report.tcl -tclargs ./vivado_rs_synth xczu3eg-sbva484-1-e 10 5 3`
+   - 汇总资源 Markdown：`python scripts/summarize_utilization.py --rpt vivado_rs_synth/utilization.rpt --out verilog/zu3eg_rs_resources.md --device xczu3eg-sbva484-1-e`
 - 使用确定性随机种子（见 `matrix/matrix_test.py`）。需要时将矩阵输出重定向：`> dump.txt`。
 
 ## 编码风格与命名

@@ -34,6 +34,7 @@ pip install -r requirements.txt
 
 # 运行矩阵管线回归与可视化（可重现随机种子见脚本）
 python matrix_test.py
+
 ```
 
 说明：`matrix_test.py` 展示“提升到循环移位域 → 线性解码 → 线性编码 → 去填充”的整条流水线；系数矩阵由 `vandermonde.py` 生成（GF(2^w)），以 `cyc_matrix.py` 的循环移位 + XOR 方式实现，可与 RTL 一一对应。
@@ -48,7 +49,7 @@ python matrix_test.py
 - `fec_codec(_stream).sv`：打包编解码顶层（含 valid/ready 流控版本）
 - `generated/`：由 `scripts/generate_static_fec.py` 生成的静态系数顶层
 
-Vivado 批处理合成、资源对比、以及 testbench 仿真 TCL 已提供，详见 `verilog/` 目录。
+Vivado 批处理合成、资源对比、以及 testbench 仿真 TCL 已提供，详见 `verilog/` 目录。目标器件既可使用 Zynq-7000（如 `xc7z010clg225-1`），也可换成 ZU3EG（如 `xczu3eg-sbva484-1-e`），在脚本参数中替换 part 即可。
 
 另见 `algo/framework.md` 的“硬件编码器：最简版本设计”，提供固定参数下的组合逻辑编码器骨架与系数生成思路，便于快速起板与验证。
 
@@ -58,6 +59,26 @@ Vivado 批处理合成、资源对比、以及 testbench 仿真 TCL 已提供，
 vivado -mode batch -source scripts/rs_encoder_min_tb.tcl \
   -tclargs ./vivado_rs_tb xc7z010clg225-1 10 15 11 2
 ```
+
+端到端编码/解码（含随机两符号擦除）测试：
+
+```bash
+vivado -mode batch -source scripts/rs_encode_decode_erase_tb.tcl \
+  -tclargs ./vivado_rs_ede xc7z010clg225-1 10 5 3 1500 3
+```
+
+资源综合与汇总（ZU3EG 示例）：
+
+```bash
+vivado -mode batch -source scripts/rs_synth_util_report.tcl \
+  -tclargs ./vivado_rs_synth xczu3eg-sbva484-1-e 10 5 3
+
+python scripts/summarize_utilization.py \
+  --rpt vivado_rs_synth/utilization.rpt \
+  --out verilog/zu3eg_rs_resources.md \
+  --device xczu3eg-sbva484-1-e
+```
+结果文档：`verilog/zu3eg_rs_resources.md`。
 
 ## 结果与对比
 
