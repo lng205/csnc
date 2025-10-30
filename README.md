@@ -19,6 +19,8 @@ python matrix/matrix_test.py
 - `encoder.py` – WIP packetization/FEC pipeline using mocked video frames.
 - `mock_data_frame.py` – reproducible byte-stream generator for encoder tests.
 - `framework.md` – mermaid diagram capturing the algorithmic data flow.
+- `scripts/generate_static_fec.py` – emit constant-matrix wrappers for hardware resource sweeps.
+- `algo/fec_vs_rs.md` – summary of the cyclic vs. RS experiment results.
 - `AGENTS.md` – contributor guide focused on this sandbox.
 
 Add new research utilities alongside these modules and keep reusable helpers
