@@ -12,10 +12,12 @@
 ## 目录结构
 
 - `algo/`：算法与仿真工作区（请在该目录内创建虚拟环境并运行）
-  - `matrix/`：矩阵形式的算法实现与测试（`matrix_test.py`）
-  - `encoder.py`：基于 Matrix 抽象的分包/FEC 编码草图
-  - `mock_data_frame.py`：可复现实验的帧数据发生器
-  - `framework.md`：处理流程框架图
+  - `matrix_test.py`：按位循环移位 FEC 管线的回归与参考对比
+  - `cyc_matrix.py`：循环移位矩阵与按位实现的转换
+  - `helper_matrix.py`：符号位宽提升/回落的块对角辅助矩阵
+  - `vandermonde.py`：GF(2^(L-1)) 上的系统范德蒙德矩阵与选列求逆
+  - `framework.md`：处理流程与设计说明（本分析文档）
+  - `fec_vs_rs.md`：与 RS IP 的资源对比与流程记录
   - `requirements.txt`：算法侧依赖清单
 - `verilog/`：FEC 编解码 RTL、流式接口实现与 testbench，Vivado 脚本
 - `scripts/`：生成静态系数/工程脚本（Python/TCL）
@@ -31,13 +33,10 @@ source .venv/bin/activate   # PowerShell: .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 
 # 运行矩阵管线回归与可视化（可重现随机种子见脚本）
-python matrix/matrix_test.py
-
-# 查看帧码率波动示例
-python mock_data_frame.py
+python matrix_test.py
 ```
 
-说明：`matrix_test.py` 展示“提升到循环移位域 → 线性解码 → 线性编码 → 去填充”的整条流水线；系数矩阵由 `vandermonde.py` 生成（GF(2^w)），再经 `cyc_matrix.py` 转换为按位循环移位 + XOR 的实现形式，可与 RTL 一一对应。
+说明：`matrix_test.py` 展示“提升到循环移位域 → 线性解码 → 线性编码 → 去填充”的整条流水线；系数矩阵由 `vandermonde.py` 生成（GF(2^w)），以 `cyc_matrix.py` 的循环移位 + XOR 方式实现，可与 RTL 一一对应。
 
 提示：`galois` 在部分系统上需要 C/C++ 编译环境（Windows 建议安装 Build Tools；Linux 建议安装 `build-essential`）。
 
@@ -50,6 +49,15 @@ python mock_data_frame.py
 - `generated/`：由 `scripts/generate_static_fec.py` 生成的静态系数顶层
 
 Vivado 批处理合成、资源对比、以及 testbench 仿真 TCL 已提供，详见 `verilog/` 目录。
+
+另见 `algo/framework.md` 的“硬件编码器：最简版本设计”，提供固定参数下的组合逻辑编码器骨架与系数生成思路，便于快速起板与验证。
+
+若需集成/对比 AMD RS 编码器，请参考 `verilog/rs_encoder_analysis.md`，其中包含接口、参数与联调建议，以及 Vivado Tcl 快速上手片段。也可直接运行：
+
+```bash
+vivado -mode batch -source scripts/rs_encoder_min_tb.tcl \
+  -tclargs ./vivado_rs_tb xc7z010clg225-1 10 15 11 2
+```
 
 ## 结果与对比
 

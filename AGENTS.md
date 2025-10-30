@@ -7,11 +7,14 @@
 
 ## 项目结构与模块组织
 - `algo/`：Python 研究工作区
-  - `matrix/`：可复用数学组件（`vandermonde.py`, `cyc_matrix.py`, `helper_matrix.py`, `matrix_test.py`）。新增通用数学请放此处，并维护 `matrix/__init__.py`。
-  - `encoder.py`：基于 `Matrix` 的分包/编码草图
-  - `mock_data_frame.py`：可复现的帧载荷生成器
-  - `framework.md`：处理流程说明
+  - `matrix_test.py`：按位循环移位 FEC 管线的回归与参考对比
+  - `cyc_matrix.py`：循环移位矩阵与按位实现转换
+  - `helper_matrix.py`：符号位宽提升/回落辅助矩阵
+  - `vandermonde.py`：系统范德蒙德矩阵生成与选列求逆
+  - `framework.md`：算法流程与设计说明
+  - `fec_vs_rs.md`：与 RS IP 的资源对比
 - `verilog/`：RTL 与脚本；`scripts/`：系数与工程生成工具
+  - `rs_encoder_analysis.md`：AMD RS 编码器接口/参数与对照分析
 
 ## 环境与开发命令
 - Python 3.10+，在 `algo/` 下创建虚拟环境并安装依赖：
@@ -21,9 +24,7 @@
   pip install -r requirements.txt
   ```
 - 在 `algo/` 目录运行：
-  - `python matrix/matrix_test.py`：按位循环 FEC 管线回归
-  - `python mock_data_frame.py`：查看比特率波动示例
-  - `python encoder.py`：集成 mock 帧与 Matrix 编码
+  - `python matrix_test.py`：按位循环 FEC 管线回归
 - 使用确定性随机种子（见 `matrix/matrix_test.py`）。需要时将矩阵输出重定向：`> dump.txt`。
 
 ## 编码风格与命名

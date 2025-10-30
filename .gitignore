@@ -18,6 +18,25 @@ dist/
 *.log
 dump.txt
 
+# Vivado/EDA generated artifacts
+*.xpr
+*.runs/
+*.cache/
+*.sim/
+*.gen/
+*.ip_user_files/
+*.hw/
+.Xil/
+xsim.dir/
+*.jou
+*.wdb
+*.wcfg
+
+# Project-local Vivado workspaces
+vivado_rs_tb/
+verilog/generated/
+dfx_runtime.txt
+
 # Tooling caches
 .pytest_cache/
 .mypy_cache/
