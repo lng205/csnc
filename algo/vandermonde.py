@@ -47,3 +47,4 @@ if __name__ == "__main__":
     gen = Van(2, 4, 16)
     print(gen.M)
     print(gen.invert([1, 3]))
+

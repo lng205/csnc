@@ -172,3 +172,4 @@ def run_trial(m: int, k: int, length: int, seed: int | None = None) -> None:
 
 if __name__ == "__main__":
     run_trial(m=3, k=5, length=11, seed=42)
+

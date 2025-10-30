@@ -12,8 +12,9 @@ from typing import Iterable
 import numpy as np
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[1]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+ALGO_DIR = REPO_ROOT / "algo"
+if str(ALGO_DIR) not in sys.path:
+    sys.path.insert(0, str(ALGO_DIR))
 
 from matrix.vandermonde import Van
 

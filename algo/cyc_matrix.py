@@ -55,3 +55,4 @@ if __name__ == "__main__":
     cm = CyclicMatrix(L)
     C = cm.convert(3)
     print(C)
+

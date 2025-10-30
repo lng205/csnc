@@ -14,3 +14,4 @@ class Matrix:
         cyclic = CyclicMatrix(self.order)
         cyclic_matrix = cyclic.filp_bits(matrix)
         return cyclic_matrix
+
