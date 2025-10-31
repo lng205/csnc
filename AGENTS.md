@@ -20,6 +20,9 @@
   - `rs_synth_util_report.tcl`：批量综合 Encoder/Decoder 并导出利用率/时序
   - `summarize_utilization.py`：解析 `utilization.rpt` 生成 Markdown 摘要
   - `rs_encoder_analysis.md`：AMD RS 编码器接口/参数与对照分析
+  - `cs_synth_util_report.tcl` / `cs_dec_synth_util_report.tcl`：CS 编/解码综合
+  - `cs_pipeline_tb.tcl`：CS 编→解组合仿真（含生成掩码的 include）
+  - `algo/generate_cs_masks_standalone.py`：不依赖外部库的掩码生成脚本
 
 ## 环境与开发命令
 - Python 3.10+，在 `algo/` 下创建虚拟环境并安装依赖：

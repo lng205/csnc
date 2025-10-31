@@ -90,3 +90,9 @@
   - 系数可编程（AXI-Lite/CSR 装载），支持不同 `packets` 选择与参数组。
   - 流式接口（AXI4-Stream）：对 `data_i` 序列化，并在输出端维持有效/就绪；移位+XOR 可分组流水化。
   - 资源与时序：轮廓由“掩码 1 的个数 × 输入数 × 位宽”决定；按掩码减半优化后 LUT 近似线性随 `K·M·L` 增长。
+
+## 掩码生成与验证（CS 编/解码）
+- 掩码生成：`python algo/generate_cs_masks_standalone.py --L 11 --M 3 --K 5 --avail 0 1 2 --out verilog/generated/cs_coeff_L11_M3_K5_avail_0_1_2.svh`
+  - 输出 `CS_ENC_COEFF[K][M]` 与 `CS_DEC_COEFF[M][K]` 的真实掩码（固定可用列 0,1,2）。
+- 逻辑仿真：`vivado -mode batch -source scripts/cs_pipeline_tb.tcl -tclargs ./vivado_cs_tb xczu3eg-sbva484-1-e`
+  - 组合测试 encoder→decoder，验证在固定擦除模式下恢复正确。

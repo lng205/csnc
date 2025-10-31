@@ -80,6 +80,20 @@ python scripts/summarize_utilization.py \
 ```
 结果文档：`verilog/zu3eg_rs_resources.md`。
 
+CS 掩码生成与逻辑仿真：
+
+```bash
+# 生成真实掩码（L=11, M=3, K=5，固定可用列 0 1 2）
+python algo/generate_cs_masks_standalone.py \
+  --L 11 --M 3 --K 5 --avail 0 1 2 \
+  --out verilog/generated/cs_coeff_L11_M3_K5_avail_0_1_2.svh
+
+# 组合流水线仿真（encoder→decoder，逻辑层 PASS）
+vivado -mode batch -source scripts/cs_pipeline_tb.tcl \
+  -tclargs ./vivado_cs_tb xczu3eg-sbva484-1-e
+```
+结果文档：`verilog/cs_bench_report.md`。
+
 ## 结果与对比
 
 在 Zynq-7000（`XC7Z010ICLG225-1L`）资源对比（示例）：

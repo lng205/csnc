@@ -1,0 +1,6 @@
+# device: xczu3eg-sbva484-1-e
+label,LUT,REG,BRAM_18K,DSP
+CS-ENC,22,0,0,0
+CS-DEC,24,0,0,0
+RS-ENC,47,92,0,0
+RS-DEC,47,92,0,0

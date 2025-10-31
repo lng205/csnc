@@ -6,23 +6,19 @@
 
 | 文件 | 说明 |
 | --- | --- |
-| `fec_matrix_apply.sv` | 核心矩阵运算单元。对 Vandermonde 系数矩阵与符号向量执行移位 + XOR 组合。内部包含掩码翻转与循环移位函数。 |
-| `fec_decoder.sv` | 独立解码模块，负责 parity 扩展并调用 `fec_matrix_apply` 完成逆矩阵运算。输出升维后的符号，用于后续编码或外部处理。 |
-| `fec_encoder.sv` | 独立编码模块，接收升维后的符号，执行编码矩阵组合并回收 parity 位，输出原始宽度。 |
-| `fec_codec.sv` | 顶层组合模块，将 decoder 与 encoder 串联，同时保留 `lifted`/`decoded`/`encoded` 调试端口。 |
-| `fec_codec_stream.sv` | 时序化外壳，包含 `valid/ready` 握手、系数寄存器配置口（`cfg_we/cfg_select/cfg_index/cfg_data`）以及调试观测总线，便于与软件流水线对比。 |
-| `cs_encoder_top.sv` | 示例顶层：将 `fec_encoder` 扁平化封装成单个模块，方便在 Vivado 工程中直接引用。 |
+| `cs_encoder_static.sv` | 示例 CS 编码器（组合逻辑，固定系数）。以“循环左移 + XOR”实现系统码编码，`L=11` 对应 10bit 符号。 |
+| `cs_decoder_static.sv` | 示例 CS 解码器（组合逻辑，固定系数）。按逆矩阵掩码对 K 路输入做移位+XOR，恢复 M 路数据。 |
 
-## 测试平台
+## 测试/综合脚本
 
-- `fec_codec_tb.sv`：验证组合顶层的逐阶段输出是否与 Python 参考实现一致。
-- `fec_codec_stream_tb.sv`：在流式接口下加载系数、发送固定负载并比对调试端口。
-- `fec_codec_sim.tcl`：Vivado 批处理脚本，一键编译并执行上述两个 testbench。
+- `scripts/cs_synth_util_report.tcl`：综合 `cs_encoder_static`，导出 `utilization.rpt` 与时序摘要。
+- `scripts/cs_dec_synth_util_report.tcl`：综合 `cs_decoder_static`，导出 `utilization.rpt` 与时序摘要。
+- `scripts/rs_synth_util_report.tcl`：批量综合 RS 编解码器，导出 per-IP 与顶层资源报告。
 
-## 综合与资源评估
+## 报告与结果
 
-- `synth_resource_compare.tcl`：批量综合循环移位 FEC 与 AMD 官方 RS Encoder/Decoder IP。脚本会生成多个工程目录，如 `fec_rs_compare_m3k5w10`，并在 `D:/vivado/fec_rs_compare_summary.csv` 中输出 LUT/寄存器统计结果。
-- `generated/`：存放 `scripts/generate_static_fec.py` 自动产生的常量系数顶层（例如 `fec_codec_static_m3_k5_w10.sv`）。可根据需要修改脚本参数后重新生成。
+- RS：`verilog/rs_bench_report.md`（周期）与 `verilog/zu3eg_rs_resources.md`（资源）。
+- CS：`verilog/cs_bench_report.md`（资源）。
 
 ## 使用提示
 
