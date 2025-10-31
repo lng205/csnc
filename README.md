@@ -1,115 +1,113 @@
-# 硬件加速器与原始算法整理说明
+# CSNC: 循环移位 + XOR FEC（CS）与 RS 对照仓库
 
-本仓库聚焦一种基于“循环移位 + 异或”的 FEC 思路：
-- 编码侧用按位循环移位和 XOR 组合实现（不再采用 RS 的矩阵乘法编码）。
-- 解码侧使用矩阵乘法等线性代数手段（替代 RS 的高斯消元解码）。
-该方法在纯软件上并无明显性能优势，但在硬件加速器上可显著节约 LUT/寄存器等资源，适合做高吞吐、低面积实现。目前尚无完全成熟的硬件版本，本项目也在寻求更优雅、可综合性强的 Verilog 设计方案与实践。
+本仓库研究以“循环移位 + XOR”完成编码，并以矩阵乘法完成解码的 CS（Circular-Shift）方案，与传统 RS（矩阵乘法编码 + 高斯消元解码）进行实现与资源对比。
 
-算法仿真与硬件实现并行推进：
-- Python 仿真与研究放在 `algo/` 工作区，编码矩阵完全由循环移位矩阵构成，便于与硬件一一对应。
-- SystemVerilog 硬件在 `verilog/`，配套生成脚本在 `scripts/`。
+- 目标：在硬件侧显著节约 LUT/寄存器资源，利于高吞吐、低面积实现。
+- 语言/工具：SystemVerilog + Vivado 2025.1，Python 3.10+（算法与绘图）。
+- 结构：`algo/` 为算法与掩码生成，`verilog/` 为 RTL 与 TB，`scripts/` 为 Vivado/Python 脚本。
 
-## 目录结构
+## 目录速览
 
-- `algo/`：算法与仿真工作区（请在该目录内创建虚拟环境并运行）
-  - `matrix_test.py`：按位循环移位 FEC 管线的回归与参考对比
-  - `cyc_matrix.py`：循环移位矩阵与按位实现的转换
-  - `helper_matrix.py`：符号位宽提升/回落的块对角辅助矩阵
-  - `vandermonde.py`：GF(2^(L-1)) 上的系统范德蒙德矩阵与选列求逆
-  - `framework.md`：处理流程与设计说明（本分析文档）
-  - `fec_vs_rs.md`：与 RS IP 的资源对比与流程记录
-  - `requirements.txt`：算法侧依赖清单
-- `verilog/`：FEC 编解码 RTL、流式接口实现与 testbench，Vivado 脚本
-- `scripts/`：生成静态系数/工程脚本（Python/TCL）
+- `algo/`
+  - `generate_cs_masks_standalone.py`：生成 CS 编/解码掩码（不依赖外部库）。
+  - 其它算法基线与说明：`framework.md`、`fec_vs_rs.md` 等。
+- `verilog/`
+  - `cs_encoder_static.sv` / `cs_decoder_static.sv`：核心组合逻辑（移位 + XOR）。
+  - `cs_pair_top.sv` / `cs_pair_impl_top.sv`：实现封装与双核实例化顶层。
+  - `cs_pipeline_tb.sv`：行为级 TB（含 include 掩码）。
+- `scripts/`
+  - `cs_pipeline_tb.tcl`：TB 仿真。
+  - `cs_dual_project.tcl`：分别综合 CS 编码器/译码器并导出利用率/时序。
+  - `cs_ps_axu3eg_xsa.tcl`：AXU3EG（ZU3EG）PS+PL 工程，生成 bit 并导出 XSA。
+  - `cs_pair_impl_project.tcl`：纯 PL 实现截图工程（仅时钟/复位 IO）。
+  - `plot_utilization.py`：解析报告并生成“学术标准”图与 CSV。
+  - `clean_repo.ps1`：清理本地 Vivado 产物/日志。
 
-## 算法环境与运行
+## 环境
 
-在 `algo/` 下创建并激活独立环境后运行脚本：
+- Python 3.10+（可选安装 matplotlib/numpy 以导出 PNG；SVG 无需依赖）
+- Vivado 2025.1（Windows/Linux）
 
-```bash
-cd algo
-python -m venv .venv
-source .venv/bin/activate   # PowerShell: .venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+## 快速仿真（CS 管线）
 
-# 运行矩阵管线回归与可视化（可重现随机种子见脚本）
-python matrix_test.py
-
-```
-
-说明：`matrix_test.py` 展示“提升到循环移位域 → 线性解码 → 线性编码 → 去填充”的整条流水线；系数矩阵由 `vandermonde.py` 生成（GF(2^w)），以 `cyc_matrix.py` 的循环移位 + XOR 方式实现，可与 RTL 一一对应。
-
-提示：`galois` 在部分系统上需要 C/C++ 编译环境（Windows 建议安装 Build Tools；Linux 建议安装 `build-essential`）。
-
-## 硬件合成与仿真
-
-硬件细节与使用说明见 `verilog/README.md`。要点：
-- `fec_matrix_apply.sv`：将 Vandermonde 系数转为“循环左移 + XOR”的按位运算
-- `fec_decoder.sv` / `fec_encoder.sv`：解码/编码（含 parity 提升/裁剪）
-- `fec_codec(_stream).sv`：打包编解码顶层（含 valid/ready 流控版本）
-- `generated/`：由 `scripts/generate_static_fec.py` 生成的静态系数顶层
-
-Vivado 批处理合成、资源对比、以及 testbench 仿真 TCL 已提供，详见 `verilog/` 目录。目标器件既可使用 Zynq-7000（如 `xc7z010clg225-1`），也可换成 ZU3EG（如 `xczu3eg-sbva484-1-e`），在脚本参数中替换 part 即可。
-
-另见 `algo/framework.md` 的“硬件编码器：最简版本设计”，提供固定参数下的组合逻辑编码器骨架与系数生成思路，便于快速起板与验证。
-
-若需集成/对比 AMD RS 编码器，请参考 `verilog/rs_encoder_analysis.md`，其中包含接口、参数与联调建议，以及 Vivado Tcl 快速上手片段。也可直接运行：
+1) 生成掩码（示例：L=11, M=3, K=5，使用列 0/1/2）
 
 ```bash
-vivado -mode batch -source scripts/rs_encoder_min_tb.tcl \
-  -tclargs ./vivado_rs_tb xc7z010clg225-1 10 15 11 2
-```
-
-端到端编码/解码（含随机两符号擦除）测试：
-
-```bash
-vivado -mode batch -source scripts/rs_encode_decode_erase_tb.tcl \
-  -tclargs ./vivado_rs_ede xc7z010clg225-1 10 5 3 1500 3
-```
-
-资源综合与汇总（ZU3EG 示例）：
-
-```bash
-vivado -mode batch -source scripts/rs_synth_util_report.tcl \
-  -tclargs ./vivado_rs_synth xczu3eg-sbva484-1-e 10 5 3
-
-python scripts/summarize_utilization.py \
-  --rpt vivado_rs_synth/utilization.rpt \
-  --out verilog/zu3eg_rs_resources.md \
-  --device xczu3eg-sbva484-1-e
-```
-结果文档：`verilog/zu3eg_rs_resources.md`。
-
-CS 掩码生成与逻辑仿真：
-
-```bash
-# 生成真实掩码（L=11, M=3, K=5，固定可用列 0 1 2）
 python algo/generate_cs_masks_standalone.py \
   --L 11 --M 3 --K 5 --avail 0 1 2 \
   --out verilog/generated/cs_coeff_L11_M3_K5_avail_0_1_2.svh
+```
 
-# 组合流水线仿真（encoder→decoder，逻辑层 PASS）
+2) 运行行为仿真（包含 include 掩码；完成后打印 PASS）
+
+```bash
 vivado -mode batch -source scripts/cs_pipeline_tb.tcl \
   -tclargs ./vivado_cs_tb xczu3eg-sbva484-1-e
 ```
-结果文档：`verilog/cs_bench_report.md`。
 
-## 结果与对比
+## CS/RS 资源对比出图与数据
 
-在 Zynq-7000（`XC7Z010ICLG225-1L`）资源对比（示例）：
+1) 生成 CS 编/解码器的综合利用率报告（ZU3EG，L=11,K=5,M=3）
 
-| m | k | data_width | FEC LUTs | FEC Regs | RS Encoder LUTs | RS Encoder Regs | RS Decoder LUTs | RS Decoder Regs |
-|---|---|------------|---------|----------|-----------------|-----------------|-----------------|-----------------|
-| 3 | 5 | 10 | 58 | 0 | 74 | 113 | 467 | 377 |
-| 5 | 8 | 10 | 146 | 0 | 85 | 123 | 486 | 380 |
-| 8 | 12 | 10 | 292 | 0 | 97 | 134 | 587 | 475 |
+```bash
+vivado -mode batch -source scripts/cs_dual_project.tcl \
+  -tclargs ./vivado_cs_dual xczu3eg-sbva484-1-e 11 5 3
+```
 
-更多背景、方法论与测评备注见 `algo/fec_vs_rs.md`。
+2) 出图（SVG）与导出 CSV（学术排版友好）
 
-## 后续工作
+```bash
+python scripts/plot_utilization.py \
+  --label CS-ENC --in vivado_cs_dual/enc_utilization.rpt \
+  --label CS-DEC --in vivado_cs_dual/dec_utilization.rpt \
+  --label RS-ENC --in verilog/zu3eg_rs_resources.md --grep rs_enc_0 \
+  --label RS-DEC --in verilog/zu3eg_rs_resources.md --grep rs_dec_0 \
+  --out reports/cs_rs_util.svg --csv reports/cs_rs_util.csv \
+  --title "Resource Utilization: ZU3EG L=11 K=5 M=3"
+```
 
-1. 在 `fec_codec_stream` 上挂接 AXI4-Stream/AXI-Lite（寄存器装载系数/选择包）
-2. 扩展 `scripts/generate_static_fec.py` 的参数空间，并联动 `synth_resource_compare.tcl`
-3. 增加 Fmax 时序收敛实验与位宽/并行度折中分析
+- 图：`reports/cs_rs_util.svg`（色盲友好配色，图例位于右上角且带白底，不遮挡网格/数据）。
+- 数据：`reports/cs_rs_util.csv`（首行含设备注释，便于论文附表/版本归档）。
 
-如需进一步说明或添加新的实验，请在 `algo/` 下新增模块与文档，并复用 `algo/matrix/` 中的可重用数学工具。
+备注：`plot_utilization.py` 可解析 Vivado `.rpt` 与 Markdown 摘要。若无 matplotlib，自动回退生成 SVG；安装 matplotlib/numpy 可导出 300 dpi PNG。
+
+## AXU3EG（ZU3EG）XSA 构建（PS+PL）
+
+使用 PS `pl_clk0`/`proc_sys_reset` 驱动 PL 内 `cs_pair_impl_top`（同时实例化编码器/译码器，彼此独立）：
+
+```bash
+vivado -mode batch -source scripts/cs_ps_axu3eg_xsa.tcl \
+  -tclargs ./vivado_cs_axu3eg xczu3eg-sbva484-1-e 11 5 3
+# 输出 XSA：vivado_cs_axu3eg/axu3eg_cs_ps.xsa（含 bitstream）
+```
+
+说明：该 XSA 不绑定外部 PL IO，适合在 Vitis 建平台并由软件侧通过 PS 访问；如需 AXI-Lite/AXIS/DMA，可在此 BD 基础上扩展。
+
+## 实现截图工程（纯 PL）
+
+仅保留 `aclk/aresetn` 两个 IO，内部激励防剪枝，便于布局布线截图：
+
+```bash
+vivado -mode batch -source scripts/cs_pair_impl_project.tcl \
+  -tclargs ./vivado_cs_impl xczu3eg-sbva484-1-e 11 5 3 5.0
+# 输出：vivado_cs_impl/impl_timing_summary.rpt, impl_utilization.rpt, impl_post_route.dcp
+```
+
+## 清理
+
+```bash
+# 仅清理日志/备份
+pwsh scripts/clean_repo.ps1
+# 包括 Vivado 工作目录一并清理
+pwsh scripts/clean_repo.ps1 -All
+```
+
+## 参考/说明
+
+- CS 掩码、生成与验证流程见 `algo/` 与 `verilog/cs_pipeline_tb.sv`。
+- RS 侧参考 `verilog/rs_encoder_analysis.md` 与 `verilog/zu3eg_rs_resources.md`（示例汇总）。
+- 若需要在 README 中展示具体数字，请将对应 `.rpt` 和 CSV 附上版本来源（器件/版本/命令）。
+
+---
+
+遇到问题或需要扩展（如 AXI-Lite 外设壳层、AXIS 数据通道、DMA/PS 驱动示例），欢迎提 Issue。我们乐于接受可综合、可复用的 RTL 与验证贡献。
