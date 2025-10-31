@@ -17,6 +17,8 @@ dist/
 # Logs and temp outputs
 *.log
 dump.txt
+clockInfo.txt
+cs_sim_log.txt
 
 # Vivado/EDA generated artifacts
 *.xpr
@@ -24,6 +26,7 @@ dump.txt
 *.cache/
 *.sim/
 *.gen/
+*.srcs/
 *.ip_user_files/
 *.hw/
 .Xil/
@@ -37,10 +40,15 @@ vivado_rs_tb/
 vivado_rs_bench/
 vivado_rs_ede/
 vivado_rs_synth/
+vivado_cs_synth/
+vivado_cs_dec_synth/
+vivado_cs_*/
+vivado_rs_*/
 verilog/generated/
 dfx_runtime.txt
 *.mif
 vivado_*.backup.*
+*.xsa
 
 # Tooling caches
 .pytest_cache/
