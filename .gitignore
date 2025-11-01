@@ -44,7 +44,7 @@ vivado_cs_synth/
 vivado_cs_dec_synth/
 vivado_cs_*/
 vivado_rs_*/
-verilog/generated/
+rtl/generated/*.svh
 dfx_runtime.txt
 *.mif
 vivado_*.backup.*

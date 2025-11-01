@@ -1,0 +1,12 @@
+# Core dependencies - optional for standalone mask generation
+# (tools/generate_masks.py works without any dependencies)
+
+# For algorithm development and testing
+numpy>=1.24.0
+
+# For visualization and reporting
+matplotlib>=3.7.0
+
+# For testing (optional)
+pytest>=7.0.0
+
