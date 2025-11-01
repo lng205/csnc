@@ -152,8 +152,9 @@ pwsh scripts/utils/clean_repo.ps1 -All
 - **算法说明**：[`docs/algorithm/framework.md`](docs/algorithm/framework.md)
 - **CS vs RS 对比**：[`docs/algorithm/fec_vs_rs.md`](docs/algorithm/fec_vs_rs.md)
 - **RS 编码器分析**：[`docs/hardware/rs_encoder_analysis.md`](docs/hardware/rs_encoder_analysis.md)
-- **资源报告**：[`docs/hardware/zu3eg_rs_resources.md`](docs/hardware/zu3eg_rs_resources.md)
+- **ZU3EG 资源报告**：[`docs/hardware/zu3eg_rs_resources.md`](docs/hardware/zu3eg_rs_resources.md)
 - **论文附录**：[`docs/paper/appendix.md`](docs/paper/appendix.md)
+- **专利信息**：[`docs/patent.txt`](docs/patent.txt)
 
 ## 🤝 贡献指南
 

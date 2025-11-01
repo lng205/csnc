@@ -29,7 +29,6 @@
     - `rs_encode_decode_erase_tb.tcl`：RS 编码→随机擦除→解码 端到端测试
   - `synth/`：综合脚本
     - `cs_dual_project.tcl`：分别综合 CS 编/解码器并导出利用率/时序
-    - `cs_synth_util_report.tcl`, `cs_dec_synth_util_report.tcl`：CS 综合报告
     - `rs_synth_util_report.tcl`：批量综合 RS Encoder/Decoder 并导出利用率/时序
   - `impl/`：实现脚本
     - `cs_pair_impl_project.tcl`：纯 PL 实现截图工程（仅时钟/复位 IO）

@@ -28,11 +28,9 @@ csnc/
 │   │   └── cs_decoder_static.sv    # CS解码器（静态参数）
 │   ├── top/                        # 顶层设计
 │   │   ├── cs_pair_top.sv          # 编解码对顶层
-│   │   ├── cs_pair_impl_top.sv     # 实现包装顶层
-│   │   └── cs_pair_impl_top_wrap.v # Verilog包装器
+│   │   └── cs_pair_impl_top.sv     # 实现包装顶层
 │   ├── testbench/                  # 测试平台
-│   │   ├── cs_pipeline_tb.sv       # 管线级测试
-│   │   └── cs_tb.sv                # 基础测试
+│   │   └── cs_pipeline_tb.sv       # 管线级测试
 │   └── generated/                  # 自动生成文件
 │       └── *.svh                   # 系数头文件
 │
@@ -44,14 +42,10 @@ csnc/
 │   │   └── rs_encode_decode_erase_tb.tcl # RS端到端测试
 │   ├── synth/                      # 综合
 │   │   ├── cs_dual_project.tcl     # CS编解码综合
-│   │   ├── cs_synth_util_report.tcl # CS综合报告
-│   │   ├── cs_dec_synth_util_report.tcl # CS解码器综合
 │   │   └── rs_synth_util_report.tcl # RS综合报告
 │   ├── impl/                       # 实现
 │   │   ├── cs_pair_impl_project.tcl # PL实现项目
-│   │   ├── cs_pair_impl.tcl        # 实现流程
-│   │   ├── cs_ps_axu3eg_xsa.tcl    # PS+PL XSA生成
-│   │   └── cs_ps_bd_impl.tcl       # PS BD实现
+│   │   └── cs_ps_axu3eg_xsa.tcl    # PS+PL XSA生成
 │   └── utils/                      # 实用工具
 │       └── clean_repo.ps1          # 清理脚本
 │
@@ -61,10 +55,7 @@ csnc/
 │   │   └── fec_vs_rs.md            # CS vs RS对比
 │   ├── hardware/                   # 硬件文档
 │   │   ├── rs_encoder_analysis.md  # RS编码器分析
-│   │   ├── rs_results_analysis.md  # RS结果分析
-│   │   ├── zu3eg_rs_resources.md   # ZU3EG资源报告
-│   │   ├── cs_bench_report.md      # CS基准测试
-│   │   └── rs_bench_report.md      # RS基准测试
+│   │   └── zu3eg_rs_resources.md   # ZU3EG资源报告
 │   ├── paper/                      # 论文
 │   │   └── appendix.md             # 论文附录
 │   └── patent.txt                  # 专利信息
