@@ -44,7 +44,7 @@ class Van:
         return np.array(rev, dtype=int)
 
 if __name__ == "__main__":
-    gen = Van(2, 4, 16)
+    gen = Van(4, 6, 10)
     print(gen.M)
-    print(gen.invert([1, 3]))
+    print(gen.invert([1, 2, 3, 5]))
 
