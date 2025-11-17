@@ -9,6 +9,9 @@ np.set_printoptions(threshold=np.inf, linewidth=np.inf)
 
 GF = galois.GF(2)
 
+def main():
+    test(3, 5, 11)
+
 def test(m, k, L):
     # (m, k) MDS码，每次处理 L-1 bits
     van = Van(m, k, L - 1)
@@ -17,9 +20,6 @@ def test(m, k, L):
 
     # 从 0 到 k-1 中随机选择 m 个不同的数
     packets = np.random.choice(k, m, replace=False)
-    print("The chosen packets:")
-    print(packets)
-    print()
 
     # 编码矩阵
     # 取 k 维扩展范德蒙矩阵的 m 列
@@ -40,8 +40,8 @@ def test(m, k, L):
 
     res = GF(h.zp) @ GF(e) @ GF(d) @ GF(h.op)
 
-    print("Zero padding + encoding + decoding:")
-    print(res)
+    # 验证 res 是否为单位矩阵
+    print(np.all(res == np.eye(m * (L - 1))))
 
 def test_paper():
     # Example from the paper
@@ -62,5 +62,4 @@ def test_paper():
     print(d_alpha)
 
 if __name__ == "__main__":
-    test(3, 5, 11)
-    # test_paper()
+    main()
