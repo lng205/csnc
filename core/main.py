@@ -38,7 +38,14 @@ def test(m, k, L):
     # 使用克罗地克积生成
     h = HelperMatrix(m, L)
 
-    res = GF(h.zp) @ GF(e) @ GF(d) @ GF(h.op)
+    # 转换为 GF(2) 矩阵
+    zp, op, e, d = GF(h.zp), GF(h.op), GF(e), GF(d)
+
+    # L - 1 / L 速率
+    # res = zp @ e @ d @ op
+
+    # 满速率
+    res = zp @ e @ op     @ zp @ d @ op
 
     # 验证 res 是否为单位矩阵
     print(np.all(res == np.eye(m * (L - 1))))
