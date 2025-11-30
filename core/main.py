@@ -10,7 +10,7 @@ np.set_printoptions(threshold=np.inf, linewidth=np.inf)
 GF = galois.GF(2)
 
 def main():
-    test(3, 5, 11)
+    test(5, 9, 11)
 
 def test(m, k, L):
     # (m, k) MDS码，每次处理 L-1 bits
