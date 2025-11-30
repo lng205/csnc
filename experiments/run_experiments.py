@@ -23,12 +23,69 @@ from vandermonde import Van
 from cyc_matrix import CyclicMatrix
 from helper_matrix import HelperMatrix
 
-# 设置中文字体和样式
-plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'DejaVu Sans']
+# ============================================================
+# 学术论文图表样式设置
+# ============================================================
+
+# 字体设置：中文宋体，英文 Times New Roman
+plt.rcParams['font.family'] = 'serif'
+plt.rcParams['font.serif'] = ['SimSun', 'Times New Roman', 'DejaVu Serif']
+plt.rcParams['font.sans-serif'] = ['SimSun', 'Microsoft YaHei', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
+plt.rcParams['mathtext.fontset'] = 'stix'  # 数学字体，接近 Times New Roman
+
+# 图表质量
 plt.rcParams['figure.dpi'] = 150
 plt.rcParams['savefig.dpi'] = 300
-plt.rcParams['font.size'] = 10
+plt.rcParams['savefig.bbox'] = 'tight'
+plt.rcParams['savefig.pad_inches'] = 0.05
+
+# 字号设置（学术论文规范：正文10-12pt）
+plt.rcParams['font.size'] = 10.5
+plt.rcParams['axes.titlesize'] = 11
+plt.rcParams['axes.labelsize'] = 10.5
+plt.rcParams['xtick.labelsize'] = 9
+plt.rcParams['ytick.labelsize'] = 9
+plt.rcParams['legend.fontsize'] = 9
+plt.rcParams['figure.titlesize'] = 12
+
+# 坐标轴和边框
+plt.rcParams['axes.linewidth'] = 0.8
+plt.rcParams['axes.edgecolor'] = 'black'
+plt.rcParams['axes.labelcolor'] = 'black'
+
+# 刻度线设置（朝内是学术规范）
+plt.rcParams['xtick.direction'] = 'in'
+plt.rcParams['ytick.direction'] = 'in'
+plt.rcParams['xtick.major.size'] = 4
+plt.rcParams['ytick.major.size'] = 4
+plt.rcParams['xtick.minor.size'] = 2
+plt.rcParams['ytick.minor.size'] = 2
+plt.rcParams['xtick.major.width'] = 0.8
+plt.rcParams['ytick.major.width'] = 0.8
+plt.rcParams['xtick.top'] = True
+plt.rcParams['ytick.right'] = True
+
+# 线条样式
+plt.rcParams['lines.linewidth'] = 1.2
+plt.rcParams['lines.markersize'] = 5
+
+# 图例设置
+plt.rcParams['legend.frameon'] = True
+plt.rcParams['legend.framealpha'] = 1.0
+plt.rcParams['legend.edgecolor'] = 'black'
+plt.rcParams['legend.fancybox'] = False
+plt.rcParams['legend.borderpad'] = 0.4
+plt.rcParams['legend.labelspacing'] = 0.3
+
+# 网格设置
+plt.rcParams['grid.linewidth'] = 0.5
+plt.rcParams['grid.alpha'] = 0.4
+plt.rcParams['grid.linestyle'] = '--'
+
+# 柱状图边框
+plt.rcParams['patch.linewidth'] = 0.8
+plt.rcParams['patch.edgecolor'] = 'black'
 
 # 创建输出目录
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), 'results')
@@ -155,7 +212,7 @@ def experiment_2_matrix_visualization():
     # 图1: 范德蒙德矩阵
     ax1 = axes[0]
     im1 = ax1.imshow(van.M, cmap='Blues', aspect='auto')
-    ax1.set_title(f'范德蒙德矩阵\n(M={m}, K={k}, GF(2^{L-1}))', fontsize=11)
+    ax1.set_title(f'范德蒙德矩阵\n(M={m}, K={k}, GF($2^{{{L-1}}}$))', fontsize=11)
     ax1.set_xlabel('列索引 (符号位置)')
     ax1.set_ylabel('行索引')
     for i in range(van.M.shape[0]):
@@ -166,7 +223,7 @@ def experiment_2_matrix_visualization():
     # 图2: 循环移位基矩阵 C_L
     ax2 = axes[1]
     im2 = ax2.imshow(c.C, cmap='Greens', aspect='equal')
-    ax2.set_title(f'循环移位基矩阵 $C_{L}$\n({L}×{L})', fontsize=11)
+    ax2.set_title(f'循环移位基矩阵 $C_{{{L}}}$\n({L}×{L})', fontsize=11)
     ax2.set_xlabel('列索引')
     ax2.set_ylabel('行索引')
     for i in range(c.C.shape[0]):
@@ -286,32 +343,35 @@ def experiment_3_complexity_analysis():
     ax1 = axes[0]
     x = np.arange(len(configs_labels))
     width = 0.35
-    bars1 = ax1.bar(x - width/2, rs_ops, width, label='传统 RS (GF乘法)', color='#e74c3c', alpha=0.8)
-    bars2 = ax1.bar(x + width/2, cs_ops, width, label='CS-FEC (移位+XOR)', color='#2ecc71', alpha=0.8)
+    bars1 = ax1.bar(x - width/2, rs_ops, width, label='传统 RS (GF乘法)', 
+                    color='#e74c3c', edgecolor='black', linewidth=0.8)
+    bars2 = ax1.bar(x + width/2, cs_ops, width, label='CS-FEC (移位+XOR)', 
+                    color='#3498db', edgecolor='black', linewidth=0.8)
     ax1.set_xlabel('编码配置 (M, K, L)')
     ax1.set_ylabel('位操作数')
     ax1.set_title('编码计算复杂度对比')
     ax1.set_xticks(x)
     ax1.set_xticklabels(configs_labels, rotation=45, ha='right')
-    ax1.legend()
+    ax1.legend(loc='upper left')
     ax1.set_yscale('log')
-    ax1.grid(axis='y', alpha=0.3)
+    ax1.grid(axis='y', linestyle='--', linewidth=0.5, alpha=0.4)
     
     # 图2: 复杂度降低百分比
     ax2 = axes[1]
+    # 使用绿色渐变表示优化效果
     colors = plt.cm.Greens(np.linspace(0.4, 0.8, len(reductions)))
-    bars = ax2.bar(configs_labels, reductions, color=colors, edgecolor='darkgreen', linewidth=1.2)
+    bars = ax2.bar(configs_labels, reductions, color=colors, edgecolor='black', linewidth=0.8)
     ax2.set_xlabel('编码配置 (M, K, L)')
     ax2.set_ylabel('复杂度降低 (%)')
     ax2.set_title('CS-FEC 相比传统 RS 的复杂度降低')
     ax2.set_xticklabels(configs_labels, rotation=45, ha='right')
-    ax2.set_ylim(0, 100)
-    ax2.grid(axis='y', alpha=0.3)
+    ax2.set_ylim(0, 105)
+    ax2.grid(axis='y', linestyle='--', linewidth=0.5, alpha=0.4)
     
     # 添加数值标签
     for bar, val in zip(bars, reductions):
         ax2.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1, 
-                f'{val:.1f}%', ha='center', va='bottom', fontsize=9)
+                f'{val:.1f}%', ha='center', va='bottom', fontsize=8)
     
     plt.tight_layout()
     plt.savefig(os.path.join(OUTPUT_DIR, 'fig3_complexity_comparison.png'), 
@@ -407,30 +467,34 @@ def experiment_4_hardware_estimation():
     rs_luts = [r['rs_luts'] for r in results]
     cs_luts = [r['total_luts'] for r in results]
     
-    bars1 = ax1.bar(x - width/2, rs_luts, width, label='传统 RS', color='#e74c3c', alpha=0.8)
-    bars2 = ax1.bar(x + width/2, cs_luts, width, label='CS-FEC', color='#3498db', alpha=0.8)
+    bars1 = ax1.bar(x - width/2, rs_luts, width, label='传统 RS', 
+                    color='#e74c3c', edgecolor='black', linewidth=0.8)
+    bars2 = ax1.bar(x + width/2, cs_luts, width, label='CS-FEC', 
+                    color='#3498db', edgecolor='black', linewidth=0.8)
     ax1.set_xlabel('编码配置 (M, K)')
     ax1.set_ylabel('LUT 数量 (估算)')
     ax1.set_title('FPGA LUT 资源对比')
     ax1.set_xticks(x)
     ax1.set_xticklabels(configs_labels)
-    ax1.legend()
-    ax1.grid(axis='y', alpha=0.3)
+    ax1.legend(loc='upper left')
+    ax1.grid(axis='y', linestyle='--', linewidth=0.5, alpha=0.4)
     
     # 图2: 资源分布 (编码器 vs 解码器)
     ax2 = axes[1]
     enc_luts = [r['enc_luts'] for r in results]
     dec_luts = [r['dec_luts'] for r in results]
     
-    bars1 = ax2.bar(x - width/2, enc_luts, width, label='编码器', color='#9b59b6', alpha=0.8)
-    bars2 = ax2.bar(x + width/2, dec_luts, width, label='解码器', color='#f39c12', alpha=0.8)
+    bars1 = ax2.bar(x - width/2, enc_luts, width, label='编码器', 
+                    color='#9b59b6', edgecolor='black', linewidth=0.8)
+    bars2 = ax2.bar(x + width/2, dec_luts, width, label='解码器', 
+                    color='#f39c12', edgecolor='black', linewidth=0.8)
     ax2.set_xlabel('编码配置 (M, K)')
     ax2.set_ylabel('LUT 数量 (估算)')
     ax2.set_title('CS-FEC 编解码器资源分布')
     ax2.set_xticks(x)
     ax2.set_xticklabels(configs_labels)
-    ax2.legend()
-    ax2.grid(axis='y', alpha=0.3)
+    ax2.legend(loc='upper left')
+    ax2.grid(axis='y', linestyle='--', linewidth=0.5, alpha=0.4)
     
     plt.tight_layout()
     plt.savefig(os.path.join(OUTPUT_DIR, 'fig4_hardware_resources.png'), 
@@ -438,196 +502,6 @@ def experiment_4_hardware_estimation():
     plt.savefig(os.path.join(OUTPUT_DIR, 'fig4_hardware_resources.pdf'), 
                 bbox_inches='tight')
     print(f"\n图表已保存: fig4_hardware_resources.png/pdf")
-    plt.close()
-    
-    return results
-
-
-def experiment_5_erasure_patterns():
-    """
-    实验5: 丢失模式恢复能力测试
-    测试不同丢失模式下的恢复成功率
-    """
-    print("\n" + "=" * 60)
-    print("实验5: 丢失模式恢复能力测试")
-    print("=" * 60)
-    
-    # 使用 (4, 8) 配置，可恢复最多 4 个丢失
-    m, k, L = 4, 8, 9
-    max_erasures = k - m
-    
-    print(f"配置: ({m}, {k}, L={L})")
-    print(f"最大可恢复丢失数: {max_erasures}")
-    
-    num_trials = 50
-    results = []
-    
-    for num_erasures in range(max_erasures + 2):  # 测试到超过最大值
-        success_count = 0
-        
-        for _ in range(num_trials):
-            try:
-                van = Van(m, k, L - 1)
-                c = CyclicMatrix(L)
-                h = HelperMatrix(m, L)
-                
-                # 随机选择要丢失的符号位置
-                if num_erasures <= k:
-                    erased = np.random.choice(k, min(num_erasures, k), replace=False)
-                    # 剩余的符号位置
-                    remaining = [i for i in range(k) if i not in erased]
-                    
-                    if len(remaining) >= m:
-                        # 从剩余中选择 m 个
-                        packets = np.array(remaining[:m])
-                        
-                        # 编码矩阵
-                        e_alpha = van.M[:, packets]
-                        e = c.convert_matrix(e_alpha)
-                        
-                        # 解码矩阵
-                        d_alpha = van.invert(packets)
-                        d = c.convert_matrix(d_alpha)
-                        
-                        # 验证
-                        zp, op, e, d = GF2(h.zp), GF2(h.op), GF2(e), GF2(d)
-                        res = zp @ e @ op @ zp @ d @ op
-                        
-                        if np.all(res == np.eye(m * (L - 1))):
-                            success_count += 1
-            except:
-                pass
-        
-        success_rate = success_count / num_trials * 100
-        results.append({
-            'erasures': num_erasures,
-            'success_rate': success_rate,
-            'recoverable': num_erasures <= max_erasures
-        })
-        
-        status = "✓ 可恢复" if num_erasures <= max_erasures else "✗ 超出能力"
-        print(f"  丢失 {num_erasures} 个符号: 成功率 {success_rate:.1f}% {status}")
-    
-    # 可视化
-    fig, ax = plt.subplots(figsize=(8, 5))
-    
-    erasures = [r['erasures'] for r in results]
-    rates = [r['success_rate'] for r in results]
-    colors = ['#2ecc71' if r['recoverable'] else '#e74c3c' for r in results]
-    
-    bars = ax.bar(erasures, rates, color=colors, edgecolor='black', linewidth=1.2)
-    ax.axvline(x=max_erasures + 0.5, color='gray', linestyle='--', linewidth=2, 
-               label=f'最大可恢复丢失={max_erasures}')
-    ax.set_xlabel('丢失符号数')
-    ax.set_ylabel('恢复成功率 (%)')
-    ax.set_title(f'({m}, {k}) MDS 码丢失恢复能力\n(L={L}, 最大可恢复 {max_erasures} 个丢失)')
-    ax.set_xticks(erasures)
-    ax.set_ylim(0, 110)
-    ax.legend()
-    ax.grid(axis='y', alpha=0.3)
-    
-    # 添加数值标签
-    for bar, val in zip(bars, rates):
-        ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2, 
-                f'{val:.0f}%', ha='center', va='bottom', fontsize=10, fontweight='bold')
-    
-    plt.tight_layout()
-    plt.savefig(os.path.join(OUTPUT_DIR, 'fig5_erasure_recovery.png'), 
-                bbox_inches='tight', facecolor='white')
-    plt.savefig(os.path.join(OUTPUT_DIR, 'fig5_erasure_recovery.pdf'), 
-                bbox_inches='tight')
-    print(f"\n图表已保存: fig5_erasure_recovery.png/pdf")
-    plt.close()
-    
-    return results
-
-
-def experiment_6_encoding_rate():
-    """
-    实验6: 编码效率分析
-    分析不同配置的编码率和冗余度
-    """
-    print("\n" + "=" * 60)
-    print("实验6: 编码效率分析")
-    print("=" * 60)
-    
-    configs = [
-        (2, 3),   # 66.7% 编码率
-        (3, 4),   # 75% 编码率
-        (3, 5),   # 60% 编码率
-        (4, 5),   # 80% 编码率
-        (4, 6),   # 66.7% 编码率
-        (4, 8),   # 50% 编码率
-        (6, 8),   # 75% 编码率
-        (8, 10),  # 80% 编码率
-        (8, 12),  # 66.7% 编码率
-    ]
-    
-    results = []
-    
-    print(f"{'配置':<10} {'编码率':<12} {'冗余度':<12} {'容错能力':<12}")
-    print("-" * 50)
-    
-    for m, k in configs:
-        rate = m / k
-        redundancy = (k - m) / m
-        fault_tolerance = k - m
-        
-        results.append({
-            'config': f"({m},{k})",
-            'm': m, 'k': k,
-            'rate': rate,
-            'redundancy': redundancy,
-            'fault_tolerance': fault_tolerance
-        })
-        
-        print(f"({m},{k})     {rate*100:.1f}%        {redundancy*100:.1f}%        {fault_tolerance}")
-    
-    # 可视化
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-    
-    configs_labels = [r['config'] for r in results]
-    rates = [r['rate'] * 100 for r in results]
-    fault_tols = [r['fault_tolerance'] for r in results]
-    
-    # 图1: 编码率
-    ax1 = axes[0]
-    colors = plt.cm.RdYlGn(np.array(rates) / 100)
-    bars = ax1.bar(configs_labels, rates, color=colors, edgecolor='black', linewidth=1)
-    ax1.axhline(y=66.7, color='gray', linestyle='--', alpha=0.7, label='典型编码率 (2/3)')
-    ax1.set_xlabel('编码配置 (M, K)')
-    ax1.set_ylabel('编码率 (%)')
-    ax1.set_title('不同配置的编码率\n(编码率 = M/K)')
-    ax1.set_xticklabels(configs_labels, rotation=45, ha='right')
-    ax1.set_ylim(0, 100)
-    ax1.legend()
-    ax1.grid(axis='y', alpha=0.3)
-    
-    for bar, val in zip(bars, rates):
-        ax1.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1, 
-                f'{val:.1f}%', ha='center', va='bottom', fontsize=8)
-    
-    # 图2: 编码率 vs 容错能力散点图
-    ax2 = axes[1]
-    scatter = ax2.scatter(rates, fault_tols, s=150, c=fault_tols, cmap='coolwarm', 
-                         edgecolor='black', linewidth=1.5)
-    
-    for i, label in enumerate(configs_labels):
-        ax2.annotate(label, (rates[i], fault_tols[i]), 
-                    textcoords="offset points", xytext=(5, 5), fontsize=9)
-    
-    ax2.set_xlabel('编码率 (%)')
-    ax2.set_ylabel('最大可恢复丢失数')
-    ax2.set_title('编码率与容错能力的权衡')
-    ax2.grid(True, alpha=0.3)
-    plt.colorbar(scatter, ax=ax2, label='容错能力')
-    
-    plt.tight_layout()
-    plt.savefig(os.path.join(OUTPUT_DIR, 'fig6_encoding_efficiency.png'), 
-                bbox_inches='tight', facecolor='white')
-    plt.savefig(os.path.join(OUTPUT_DIR, 'fig6_encoding_efficiency.pdf'), 
-                bbox_inches='tight')
-    print(f"\n图表已保存: fig6_encoding_efficiency.png/pdf")
     plt.close()
     
     return results
@@ -724,8 +598,6 @@ def main():
     all_results['matrices'] = experiment_2_matrix_visualization()
     all_results['complexity'] = experiment_3_complexity_analysis()
     all_results['hardware'] = experiment_4_hardware_estimation()
-    all_results['erasure'] = experiment_5_erasure_patterns()
-    all_results['efficiency'] = experiment_6_encoding_rate()
     
     # 生成 LaTeX 表格
     generate_latex_tables(all_results)
@@ -744,8 +616,6 @@ def main():
     print("  fig2: 辅助矩阵结构")
     print("  fig3: 计算复杂度对比")
     print("  fig4: 硬件资源估算")
-    print("  fig5: 丢失恢复能力")
-    print("  fig6: 编码效率分析")
     print("  tables.tex: LaTeX 格式数据表格")
 
 
