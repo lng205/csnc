@@ -12,39 +12,45 @@ csnc/
 │   ├── helper_matrix.py   # 辅助矩阵
 │   └── main.py            # 测试
 │
-├── rtl/                    # Verilog 硬件实现
-│   ├── cs_encoder.sv      # 编码器
-│   ├── cs_decoder.sv      # 解码器
-│   ├── cs_codec.sv        # 顶层封装
-│   └── cs_config_pkg.sv   # 配置包
+├── rtl/                    # SystemVerilog 硬件实现
+│   ├── cs_encoder_2_3.sv  # (2,3) 编码器
+│   ├── cs_decoder_2_3.sv  # (2,3) 解码器
+│   └── cs_tb_2_3.sv       # 测试平台
 │
 └── tools/
-    └── gen_shift_table.py # 移位表生成工具
+    └── verify_2_3.py      # Python 验证脚本
 ```
 
 ## 快速开始
 
-### Python 算法
+### Python 算法验证
 
 ```bash
 pip install numpy galois
-python core/main.py
+python tools/verify_2_3.py
 ```
 
-### RTL 仿真
+### RTL 仿真 (Vivado)
 
 ```bash
 cd rtl
-xvlog -sv cs_config_pkg.sv cyclic_shift.sv cs_encoder.sv cs_decoder.sv cs_codec.sv cs_tb.sv
-xelab cs_tb && xsim cs_tb -runall
+xvlog -sv cs_encoder_2_3.sv cs_decoder_2_3.sv cs_tb_2_3.sv
+xelab cs_tb_2_3 -s sim
+xsim sim -runall
 ```
 
 ## 算法原理
 
-**(M, K) MDS 码**：M 个数据符号编码为 K 个符号，可恢复任意 K-M 个丢失。
+**(2, 3) MDS 码**：2 个数据符号编码为 3 个符号，可恢复 1 个丢失。
 
-**编码**：`Parity = XOR(cyclic_shift(data_i, shift_i))`
+**编码**：
+```
+p0 = shift(d0, 1) XOR shift(d1, 2)
+输出: [d0, d1, p0]
+```
 
-**解码**：`Data = inv_shift(Parity XOR other_shifted_data)`
+**解码**：
+- d0 丢失: `d0 = inv_shift(p0 XOR shift(d1, 2), 1)`
+- d1 丢失: `d1 = inv_shift(p0 XOR shift(d0, 1), 2)`
 
-优势：用循环移位 + XOR 替代有限域乘法，硬件友好。
+**优势**：用循环移位 + XOR 替代有限域乘法，硬件友好。

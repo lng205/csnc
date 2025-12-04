@@ -1,47 +1,22 @@
-# CS-FEC RTL
+# RTL 实现
 
-参数化的循环移位 + XOR MDS FEC 硬件实现。
+## (2, 3) MDS 码
 
-## 文件
-
-| 文件 | 说明 |
-|------|------|
-| `cyclic_shift.sv` | 循环移位基础模块 |
-| `cs_encoder.sv` | 参数化编码器 |
-| `cs_decoder.sv` | 参数化解码器 |
-| `cs_codec.sv` | 编解码器顶层封装 |
-| `cs_config_pkg.sv` | 预定义配置包 |
-| `cs_tb.sv` | 测试平台 |
+- **cs_encoder_2_3.sv** - 编码器：2 个数据 → 3 个编码符号
+- **cs_decoder_2_3.sv** - 解码器：可恢复 1 个擦除
+- **cs_tb_2_3.sv** - 测试平台
 
 ## 参数
 
-| 参数 | 说明 |
-|------|------|
-| `M` | 数据符号数 |
-| `K` | 总符号数 (数据 + 校验) |
-| `WIDTH` | 符号位宽 |
-| `SHIFT_TABLE` | 编码移位表 `[K-M][M]` |
-| `INV_SHIFT` | 解码逆移位表 `[K-M][M]` |
-
-## 使用
-
-```systemverilog
-import cs_config_pkg::*;
-
-cs_codec #(
-    .M           (CFG_2_3_M),
-    .K           (CFG_2_3_K),
-    .WIDTH       (CFG_2_3_WIDTH),
-    .SHIFT_TABLE (CFG_2_3_SHIFT),
-    .INV_SHIFT   (CFG_2_3_INV)
-) u_codec ( ... );
-```
+- WIDTH = 4 bits
+- SHIFT_D0 = 1, SHIFT_D1 = 2
+- INV_SHIFT_D0 = 3, INV_SHIFT_D1 = 2
 
 ## 仿真
 
 ```bash
 # Vivado
-xvlog -sv cs_config_pkg.sv cyclic_shift.sv cs_encoder.sv cs_decoder.sv cs_codec.sv cs_tb.sv
-xelab cs_tb -debug typical
-xsim cs_tb -runall
+xvlog -sv cs_encoder_2_3.sv cs_decoder_2_3.sv cs_tb_2_3.sv
+xelab cs_tb_2_3 -s sim
+xsim sim -runall
 ```
