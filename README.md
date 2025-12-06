@@ -6,19 +6,9 @@
 
 ```
 csnc/
-├── core/                   # Python 算法实现
-│   ├── vandermonde.py     # 范德蒙德矩阵 (GF(2^k))
-│   ├── cyc_matrix.py      # 循环移位矩阵转换
-│   ├── helper_matrix.py   # 辅助矩阵
-│   └── main.py            # 测试
-│
-├── rtl/                    # SystemVerilog 硬件实现
-│   ├── cs_encoder_2_3.sv  # (2,3) 编码器
-│   ├── cs_decoder_2_3.sv  # (2,3) 解码器
-│   └── cs_tb_2_3.sv       # 测试平台
-│
-└── tools/
-    └── verify_2_3.py      # Python 验证脚本
+├── csnc.py        # 单文件 Python 实现与示例入口
+├── README.md
+└── requirements.txt
 ```
 
 ## 快速开始
@@ -26,8 +16,8 @@ csnc/
 ### Python 算法验证
 
 ```bash
-pip install numpy galois
-python tools/verify_2_3.py
+pip install -r requirements.txt
+python csnc.py
 ```
 
 ### RTL 仿真 (Vivado)
