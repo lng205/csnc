@@ -6,41 +6,52 @@
 
 ```
 csnc/
-├── csnc.py        # 单文件 Python 实现与示例入口
+├── docs/          # 文档 (math.md, proof.md)
+├── python/        # Python 算法实现与验证脚本
+│   ├── csnc.py        # 核心算法实现
+│   ├── gen_tb.py      # 生成 Verilog Testbench 的脚本
+│   └── requirements.txt
+├── rtl/           # Verilog 硬件实现
+│   └── csnc_encoder.v # 编码器实现
+├── sim/           # 仿真文件
+│   └── csnc_tb.v      # 自动生成的 Testbench
 ├── README.md
-└── requirements.txt
+└── .gitignore
 ```
 
 ## 快速开始
 
-### Python 算法验证
+### 1. Python 算法验证
 
 ```bash
+cd python
+# 安装依赖
 pip install -r requirements.txt
+
+# 运行算法演示
 python csnc.py
+
+# 生成 Verilog 测试向量 (可选，已生成)
+python gen_tb.py
 ```
 
-### RTL 仿真 (Vivado)
+### 2. RTL 仿真 (Vivado)
+
+在项目根目录下运行：
 
 ```bash
-cd rtl
-xvlog -sv cs_encoder_2_3.sv cs_decoder_2_3.sv cs_tb_2_3.sv
-xelab cs_tb_2_3 -s sim
-xsim sim -runall
+# 1. 编译 Verilog 文件
+xvlog rtl/csnc_encoder.v sim/csnc_tb.v
+
+# 2. 生成仿真快照
+xelab -debug typical -top csnc_tb -snapshot csnc_tb_snap
+
+# 3. 运行仿真
+xsim csnc_tb_snap -R
 ```
 
 ## 算法原理
 
-**(2, 3) MDS 码**：2 个数据符号编码为 3 个符号，可恢复 1 个丢失。
+利用循环移位矩阵在二进制域上同构表示有限域乘法，从而用简单的**循环移位 + XOR** 操作替代复杂的有限域乘法器，实现硬件友好的纠删码 (MDS Code)。
 
-**编码**：
-```
-p0 = shift(d0, 1) XOR shift(d1, 2)
-输出: [d0, d1, p0]
-```
-
-**解码**：
-- d0 丢失: `d0 = inv_shift(p0 XOR shift(d1, 2), 1)`
-- d1 丢失: `d1 = inv_shift(p0 XOR shift(d0, 1), 2)`
-
-**优势**：用循环移位 + XOR 替代有限域乘法，硬件友好。
+详细数学推导请参阅 [docs/math.md](docs/math.md) 和 [docs/proof.md](docs/proof.md)。
